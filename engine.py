@@ -1,6 +1,5 @@
+import math
 from enum import Enum
-
-import numpy as np
 
 
 class Op(Enum):
@@ -28,8 +27,7 @@ class Value:
 
     def tanh(self) -> "Value":
         return Value(
-            (np.exp(self.data) - np.exp(-self.data))
-            / (np.exp(self.data) + np.exp(-self.data)),
+            (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1),
             [self],
             Op.TANH,
         )
