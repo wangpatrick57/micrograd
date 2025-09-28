@@ -10,7 +10,7 @@ class Op(Enum):
 
 
 class Value:
-    def __init__(self, data: float, _prev: list["Value"] = [], _op: Op = Op.NONE):
+    def __init__(self, data: float, _prev: tuple["Value", ...] = [], _op: Op = Op.NONE):
         self.data = data
         self.grad: float | None = None
         self._prev = _prev
@@ -20,15 +20,15 @@ class Value:
         return f"Value(data={self.data})"
 
     def __add__(self, other: "Value") -> "Value":
-        return Value(self.data + other.data, [self, other], Op.ADD)
+        return Value(self.data + other.data, (self, other), Op.ADD)
 
     def __mul__(self, other: "Value") -> "Value":
-        return Value(self.data * other.data, [self, other], Op.MUL)
+        return Value(self.data * other.data, (self, other), Op.MUL)
 
     def tanh(self) -> "Value":
         return Value(
             (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1),
-            [self],
+            (self,),
             Op.TANH,
         )
 
