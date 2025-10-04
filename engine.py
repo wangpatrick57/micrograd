@@ -21,41 +21,28 @@ class Value:
         return f"Value(data={self.data})"
 
     def __add__(self, other: "Value") -> "Value":
-        a = self.data
-        b = other.data
-        out = a + b
+        out_data = self.data + other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
-            a_local_grad = 1
-            b_local_grad = 1
-            local_grads = (a_local_grad, b_local_grad)
-            return (local_grad * out_grad for local_grad in local_grads)
+            return (out_grad, out_grad)
 
-        return Value(out, _prev=(self, other), _grad_fn=grad_fn)
+        return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
 
     def __mul__(self, other: "Value") -> "Value":
-        a = self.data
-        b = other.data
-        out = a * b
+        out_data = self.data * other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
-            a_local_grad = b
-            b_local_grad = a
-            local_grads = (a_local_grad, b_local_grad)
-            return (local_grad * out_grad for local_grad in local_grads)
+            return (other.data * out_grad, self.data * out_grad)
 
-        return Value(out, _prev=(self, other), _grad_fn=grad_fn)
+        return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
 
     def tanh(self) -> "Value":
-        a = self.data
-        out = (math.exp(2 * a) - 1) / (math.exp(2 * a) + 1)
+        out_data = (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1)
 
         def grad_fn(out_grad: float) -> tuple[float]:
-            a_local_grad = 1 - out**2
-            local_grads = (a_local_grad,)
-            return (local_grad * out_grad for local_grad in local_grads)
+            return ((1 - out_data**2) * out_grad,)
 
-        return Value(out, _prev=(self,), _grad_fn=grad_fn)
+        return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
 
     def _is_leaf(self) -> bool:
         if self._prev is None:
