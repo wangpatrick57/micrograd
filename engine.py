@@ -26,9 +26,10 @@ class Value:
         out = a + b
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
-            a_grad = 1 * out_grad
-            b_grad = 1 * out_grad
-            return (a_grad, b_grad)
+            a_local_grad = 1
+            b_local_grad = 1
+            local_grads = (a_local_grad, b_local_grad)
+            return (local_grad * out_grad for local_grad in local_grads)
 
         return Value(out, _prev=(self, other), _grad_fn=grad_fn)
 
@@ -38,17 +39,23 @@ class Value:
         out = a * b
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
-            a_grad = b * out_grad
-            b_grad = a * out_grad
-            return (a_grad, b_grad)
+            a_local_grad = b
+            b_local_grad = a
+            local_grads = (a_local_grad, b_local_grad)
+            return (local_grad * out_grad for local_grad in local_grads)
 
         return Value(out, _prev=(self, other), _grad_fn=grad_fn)
 
     def tanh(self) -> "Value":
-        return Value(
-            (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1),
-            _prev=(self,),
-        )
+        a = self.data
+        out = (math.exp(2 * a) - 1) / (math.exp(2 * a) + 1)
+
+        def grad_fn(out_grad: float) -> tuple[float]:
+            a_local_grad = 1 - out**2
+            local_grads = (a_local_grad,)
+            return (local_grad * out_grad for local_grad in local_grads)
+
+        return Value(out, _prev=(self,), _grad_fn=grad_fn)
 
     def _is_leaf(self) -> bool:
         if self._prev is None:
@@ -75,7 +82,6 @@ class Value:
 
 if __name__ == "__main__":
     a = Value(2.0)
-    b = Value(3.0)
-    c = a * b
-    c.backward()
-    print(a.grad, b.grad, c.grad)
+    b = a.tanh()
+    b.backward()
+    print(a.grad, b.grad)
