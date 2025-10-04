@@ -45,12 +45,8 @@ class Value:
         return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
 
     def _is_leaf(self) -> bool:
-        if self._prev is None:
-            assert self._grad_fn is None
-            return True
-        else:
-            assert self._grad_fn is not None
-            return False
+        assert (self._prev is None) == (self._grad_fn is None)
+        return self._prev is None
 
     def _propagate(self) -> None:
         if not self._is_leaf():
