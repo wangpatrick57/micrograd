@@ -1,35 +1,25 @@
 import math
-from enum import Enum
-
-
-class Op(Enum):
-    NONE = ""
-    ADD = "+"
-    MUL = "*"
-    TANH = "tanh"
 
 
 class Value:
-    def __init__(self, data: float, _prev: tuple["Value", ...] = [], _op: Op = Op.NONE):
+    def __init__(self, data: float):
         self.data = data
         self.grad: float | None = None
-        self._prev = _prev
-        self._op = _op
+        self._prev: tuple["Value", ...] | None = None
 
     def __repr__(self) -> str:
         return f"Value(data={self.data})"
 
     def __add__(self, other: "Value") -> "Value":
-        return Value(self.data + other.data, (self, other), Op.ADD)
+        return Value(self.data + other.data, (self, other))
 
     def __mul__(self, other: "Value") -> "Value":
-        return Value(self.data * other.data, (self, other), Op.MUL)
+        return Value(self.data * other.data, (self, other))
 
     def tanh(self) -> "Value":
         return Value(
             (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1),
             (self,),
-            Op.TANH,
         )
 
 
