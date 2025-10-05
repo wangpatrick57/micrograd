@@ -56,6 +56,14 @@ class Value:
 
         return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
 
+    def exp(self) -> "Value":
+        out_data = math.exp(self.data)
+
+        def grad_fn(out_grad: float) -> float:
+            return (out_data * out_grad,)
+
+        return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
+
     def _topo_sort(self) -> list["Value"]:
         """
         DFS-based topological sort assuming no cycles.
@@ -83,6 +91,6 @@ class Value:
 
 if __name__ == "__main__":
     a = Value(2.0)
-    b = a * 3.5
+    b = a.exp()
     b.backward()
     print(a.grad, b.grad)
