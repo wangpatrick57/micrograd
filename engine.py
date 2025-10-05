@@ -20,10 +20,7 @@ class Value:
     def __repr__(self) -> str:
         return f"Value(data={self.data})"
 
-    def __add__(self, other: "Value | float") -> "Value":
-        if isinstance(other, float):
-            other = Value(other)
-
+    def __add__(self, other: "Value") -> "Value":
         out_data = self.data + other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
@@ -34,10 +31,7 @@ class Value:
     def __radd__(self, other: float) -> "Value":
         return self.__add__(other)
 
-    def __mul__(self, other: "Value | float") -> "Value":
-        if isinstance(other, float):
-            other = Value(other)
-
+    def __mul__(self, other: "Value") -> "Value":
         out_data = self.data * other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
