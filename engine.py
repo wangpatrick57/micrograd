@@ -62,10 +62,8 @@ class Value:
         return list(reversed(reversed_topo))
 
     def backward(self) -> None:
-        topo = self._topo_sort()
         self.grad = 1.0
-
-        for v in topo:
+        for v in self._topo_sort():
             prev_grads = v._grad_fn(v.grad)
             for p, grad in zip(v._prev, prev_grads):
                 p.grad += grad
@@ -74,8 +72,7 @@ class Value:
 if __name__ == "__main__":
     a = Value(2.0)
     b = Value(3.0)
-    c = Value(4.0)
-    d = a + b
-    e = a + d
-    e.backward()
-    print(a.grad, b.grad, c.grad, d.grad, e.grad)
+    c = a + b
+    d = a + c
+    d.backward()
+    print(a.grad, b.grad, c.grad, d.grad)
