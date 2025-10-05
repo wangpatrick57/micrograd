@@ -20,7 +20,10 @@ class Value:
     def __repr__(self) -> str:
         return f"Value(data={self.data})"
 
-    def __add__(self, other: "Value") -> "Value":
+    def __add__(self, other: "Value | float") -> "Value":
+        if isinstance(other, float):
+            other = Value(other)
+
         out_data = self.data + other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
@@ -28,13 +31,22 @@ class Value:
 
         return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
 
-    def __mul__(self, other: "Value") -> "Value":
+    def __radd__(self, other: float) -> "Value":
+        return self.__add__(other)
+
+    def __mul__(self, other: "Value | float") -> "Value":
+        if isinstance(other, float):
+            other = Value(other)
+
         out_data = self.data * other.data
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
             return (other.data * out_grad, self.data * out_grad)
 
         return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
+
+    def __rmul__(self, other: float) -> "Value":
+        return self.__mul__(other)
 
     def tanh(self) -> "Value":
         out_data = (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1)
@@ -71,8 +83,6 @@ class Value:
 
 if __name__ == "__main__":
     a = Value(2.0)
-    b = Value(3.0)
-    c = a + b
-    d = a + c
-    d.backward()
-    print(a.grad, b.grad, c.grad, d.grad)
+    b = a * 3.5
+    b.backward()
+    print(a.grad, b.grad)
