@@ -34,6 +34,20 @@ class Value:
     def __radd__(self, other: float) -> "Value":
         return Value(other).__add__(self)
 
+    def __neg__(self) -> "Value":
+        out_data = -self.data
+
+        def grad_fn(out_grad: float) -> tuple[float]:
+            return (-out_grad,)
+
+        return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
+
+    def __sub__(self, other: "Value | float") -> "Value":
+        return self + -other
+
+    def __rsub__(self, other: float) -> "Value":
+        return Value(other).__sub__(self)
+
     def __mul__(self, other: "Value | float") -> "Value":
         if isinstance(other, float):
             other = Value(other)
@@ -114,6 +128,6 @@ class Value:
 
 if __name__ == "__main__":
     a = Value(3.0)
-    b = a / 2.0
+    b = 2.0 - a
     b.backward()
     print(a.grad, b.grad)
