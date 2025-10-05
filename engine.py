@@ -124,10 +124,3 @@ class Value:
             prev_grads = v._grad_fn(v.grad)
             for p, grad in zip(v._prev, prev_grads):
                 p.grad += grad
-
-
-if __name__ == "__main__":
-    a = Value(3.0)
-    b = 2.0 - a
-    b.backward()
-    print(a.grad, b.grad)
