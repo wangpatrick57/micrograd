@@ -52,11 +52,13 @@ if __name__ == "__main__":
     ]
     ys = [1.0, -1.0, -1.0, 1.0]
     m = MLP([3, 4, 4, 1])
-    lr = 0.01
+    lr = 0.05
 
     for _ in range(10):
         ypreds = [m(x)[0] for x in xs]
         loss: Value = sum((y - ypred) ** 2.0 for y, ypred in zip(ys, ypreds))
         print("loss", loss)
         loss.backward()
-        print(m.parameters())
+        for parameter in m.parameters():
+            parameter.data -= lr * parameter.grad
+            parameter.grad = 0
