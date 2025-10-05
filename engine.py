@@ -6,16 +6,16 @@ class Value:
     def __init__(
         self,
         data: float,
-        _prev: tuple["Value", ...] | None = None,
+        _prev: tuple["Value", ...] = (),
         # Takes in out_grad (self.grad) and returns the gradients of each of the Values
         # in self._prev. Is a closure and can access the original inputs and outputs of
         # the forward pass.
-        _grad_fn: Callable[[float], tuple[float, ...]] | None = None,
+        _grad_fn: Callable[[float], tuple[float, ...]] = lambda out_grad : (),
     ):
         self.data = data
-        self.grad: float | None = None
-        self._prev: tuple["Value", ...] | None = _prev
-        self._grad_fn: Callable | None = _grad_fn
+        self.grad: float = 0.0
+        self._prev = _prev
+        self._grad_fn = _grad_fn
 
     def __repr__(self) -> str:
         return f"Value(data={self.data})"
@@ -44,27 +44,38 @@ class Value:
 
         return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
 
-    def _is_leaf(self) -> bool:
-        assert (self._prev is None) == (self._grad_fn is None)
-        return self._prev is None
-
-    def _propagate(self) -> None:
-        if not self._is_leaf():
-            grads = self._grad_fn(self.grad)
-
-            for p, grad in zip(self._prev, grads):
-                p.grad = grad
-
-            for p in self._prev:
-                p._propagate()
+    def _topo_sort(self) -> list["Value"]:
+        """
+        DFS-based topological sort assuming no cycles.
+        """
+        reversed_topo: list["Value"] = []
+        visited: set["Value"] = set()
+        
+        def build_reversed_topo(curr: "Value") -> None:
+            if curr not in visited:
+                visited.add(curr)
+                for p in curr._prev:
+                    build_reversed_topo(p)
+                reversed_topo.append(curr)
+        
+        build_reversed_topo(self)
+        return list(reversed(reversed_topo))
 
     def backward(self) -> None:
+        topo = self._topo_sort()
         self.grad = 1.0
-        self._propagate()
+
+        for v in topo:
+            prev_grads = v._grad_fn(v.grad)
+            for p, grad in zip(v._prev, prev_grads):
+                p.grad += grad
 
 
 if __name__ == "__main__":
     a = Value(2.0)
-    b = a.tanh()
-    b.backward()
-    print(a.grad, b.grad)
+    b = Value(3.0)
+    c = Value(4.0)
+    d = a + b
+    e = a + d
+    e.backward()
+    print(a.grad, b.grad, c.grad, d.grad, e.grad)
