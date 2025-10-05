@@ -62,22 +62,17 @@ class Value:
     def __rmul__(self, other: float) -> "Value":
         return Value(other).__mul__(self)
 
-    def __pow__(self, other: "Value | float") -> "Value":
-        if isinstance(other, float):
-            other = Value(other)
-
-        out_data = self.data**other.data
+    def __pow__(self, other: float) -> "Value":
+        """
+        We don't support other being a Value because if the base is negative then it's
+        impossible to differentiate w.r.t. the exponent.
+        """
+        out_data = self.data**other
 
         def grad_fn(out_grad: float) -> tuple[float, float]:
-            return (
-                other.data * self.data ** (other.data - 1.0) * out_grad,
-                math.log(self.data) * self.data**other.data * out_grad,
-            )
+            return (other * self.data ** (other - 1.0) * out_grad,)
 
-        return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
-
-    def __rpow__(self, other: float) -> "Value":
-        return Value(other).__pow__(self)
+        return Value(out_data, _prev=(self,), _grad_fn=grad_fn)
 
     def __truediv__(self, other: "Value | float") -> "Value":
         return self * other**-1.0
