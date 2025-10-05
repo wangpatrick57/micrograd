@@ -36,6 +36,20 @@ class Value:
 
         return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
 
+    def __pow__(self, other: "Value") -> "Value":
+        out_data = self.data**other.data
+
+        def grad_fn(out_grad: float) -> tuple[float, float]:
+            return (
+                other.data * self.data ** (other.data - 1) * out_grad,
+                math.log(self.data) * self.data**other.data * out_grad,
+            )
+
+        return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
+
+    def __truediv__(self, other: "Value") -> "Value":
+        return self * other**-1
+
     def tanh(self) -> "Value":
         out_data = (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1)
 
@@ -79,6 +93,6 @@ class Value:
 
 if __name__ == "__main__":
     a = Value(2.0)
-    b = a.exp()
+    b = a**2
     b.backward()
     print(a.grad, b.grad)
