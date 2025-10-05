@@ -28,9 +28,6 @@ class Value:
 
         return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
 
-    def __radd__(self, other: float) -> "Value":
-        return self.__add__(other)
-
     def __mul__(self, other: "Value") -> "Value":
         out_data = self.data * other.data
 
@@ -38,9 +35,6 @@ class Value:
             return (other.data * out_grad, self.data * out_grad)
 
         return Value(out_data, _prev=(self, other), _grad_fn=grad_fn)
-
-    def __rmul__(self, other: float) -> "Value":
-        return self.__mul__(other)
 
     def tanh(self) -> "Value":
         out_data = (math.exp(2 * self.data) - 1) / (math.exp(2 * self.data) + 1)
