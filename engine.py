@@ -10,7 +10,7 @@ class Value:
         # Takes in out_grad (self.grad) and returns the gradients of each of the Values
         # in self._prev. Is a closure and can access the original inputs and outputs of
         # the forward pass.
-        _grad_fn: Callable[[float], tuple[float, ...]] = lambda out_grad : (),
+        _grad_fn: Callable[[float], tuple[float, ...]] = lambda out_grad: (),
     ):
         self.data = data
         self.grad: float = 0.0
@@ -70,14 +70,14 @@ class Value:
         """
         reversed_topo: list["Value"] = []
         visited: set["Value"] = set()
-        
+
         def build_reversed_topo(curr: "Value") -> None:
             if curr not in visited:
                 visited.add(curr)
                 for p in curr._prev:
                     build_reversed_topo(p)
                 reversed_topo.append(curr)
-        
+
         build_reversed_topo(self)
         return list(reversed(reversed_topo))
 
