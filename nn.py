@@ -3,7 +3,16 @@ import random
 from engine import Value
 
 
-class Neuron:
+class Module:
+    def zero_grad(self) -> None:
+        for parameter in self.parameters():
+            parameter.grad = 0
+
+    def parameters(self) -> list[Value]:
+        return []
+
+
+class Neuron(Module):
     def __init__(self, nin: int):
         self.w = [Value(random.uniform(-1.0, 1.0)) for _ in range(nin)]
         self.b = Value(random.uniform(-1.0, 1.0))
@@ -17,7 +26,7 @@ class Neuron:
         return self.w + [self.b]
 
 
-class Layer:
+class Layer(Module):
     def __init__(self, nin: int, nout: int):
         self.neurons = [Neuron(nin) for _ in range(nout)]
 
@@ -30,7 +39,7 @@ class Layer:
         ]
 
 
-class MLP:
+class MLP(Module):
     def __init__(self, szs: list[int]):
         self.layers = [Layer(nin, nout) for nin, nout in zip(szs, szs[1:])]
 
@@ -58,13 +67,10 @@ if __name__ == "__main__":
         ypreds = [m(x)[0] for x in xs]
         loss: Value = sum((y - ypred) ** 2.0 for y, ypred in zip(ys, ypreds))
         print("loss", loss)
-
-        for parameter in m.parameters():
-            parameter.grad = 0.0
-
+        m.zero_grad()
         loss.backward()
 
         for parameter in m.parameters():
             parameter.data -= lr * parameter.grad
-    
+
     print(ypreds)
